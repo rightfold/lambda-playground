@@ -1,6 +1,7 @@
 module Data.Lambda
 ( Term(..)
 , alphaConvert
+, betaReduce
 ) where
 
 import Control.Monad.State (evalState)
@@ -34,3 +35,13 @@ alphaConvert t = evalState (go Map.empty t) 0
 
         letter :: Int -> String
         letter n = Char.toString $ fromCharCode $ 97 + n
+
+betaReduce :: forall a. Term a -> Term a
+betaReduce = alphaConvert >>> go Map.empty >>> alphaConvert
+  where go :: forall b. Map String (Term b) -> Term b -> Term b
+        go m v@(Var _ n) = fromMaybe v (Map.lookup n m)
+        go m   (Abs p b) = Abs p (go m b)
+        go m   (App c a) =
+          case c of
+            (Abs p b) -> go (Map.insert p (go m a) m) b
+            _ -> App (go m c) (go m a)
