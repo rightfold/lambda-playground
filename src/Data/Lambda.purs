@@ -30,8 +30,8 @@ alphaConvert t = evalState (go Map.empty t) 0
   where go :: forall b m. (MonadState Int m) => Map String String -> Term b -> m (Term b)
         go m (Var a n) = pure $ Var a (fromMaybe n (Map.lookup n m))
         go m (Abs p b) = do
-          modify (_ + 1)
           p' <- gets letter
+          modify (_ + 1)
           Abs p' <$> go (Map.insert p p' m) b
         go m (App c a) = App <$> go m c <*> go m a
 

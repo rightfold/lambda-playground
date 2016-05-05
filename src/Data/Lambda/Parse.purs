@@ -99,6 +99,13 @@ var _ = this <|> natural <|> macro <|> parend
                 go "curry"   = Just $ Abs "f" (Abs "x" (Abs "y" (App f (App (App pair x) y))))
                 go "uncurry" = Just $ Abs "f" (Abs "p" (App (App f (App first p)) (App second p)))
 
+                go "s"       = Just $ s
+                go "k"       = Just $ k
+                go "i"       = Just $ Abs "x" x
+                go "u"       = Just $ Abs "f" (App (App f s) k)
+                go "y"       = Just $ Abs "f" (App (Abs "x" (App f (App x x)))
+                                                   (Abs "x" (App f (App x x))))
+
                 go _        = Nothing
 
                 true_  = Abs "x" (Abs "y" x)
@@ -108,6 +115,9 @@ var _ = this <|> natural <|> macro <|> parend
                 pair   = Abs "x" (Abs "y" (Abs "z" (App (App z x) y)))
                 first  = Abs "p" (App p true_)
                 second = Abs "p" (App p false_)
+
+                s = Abs "x" (Abs "y" (Abs "z" (App (App x z) (App y z))))
+                k = true_
 
                 f = Var unit "f"
                 n = Var unit "n"
