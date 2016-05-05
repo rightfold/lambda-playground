@@ -5,29 +5,53 @@ module Main
 import Control.Monad.Eff (Eff)
 import Data.Function (Fn5, runFn5)
 import Data.Lambda (alphaConvert, betaReduce, Term(..))
+import Data.Set as Set
 import DOM (DOM)
 import Prelude
 
 main :: forall eff. Eff (dom :: DOM | eff) Unit
-main = runFn5 main' t alphaConvert betaReduce id render
-  where t  = App y (Var unit "free")
+main = runFn5 main' (annotate t) alphaConvert betaReduce id render
+  where t = App (App u'' u'') (App y (App (Var unit "f") (Var unit "x")))
+
+        s = Abs "x" (Abs "y" (Abs "z" (App (App (Var unit "x") (Var unit "z"))
+                                           (App (Var unit "y") (Var unit "z")))))
+        k = Abs "x" (Abs "y" (Var unit "x"))
+
+        u = Abs "f" (App (App (Var unit "f") s) k)
+
+        s' = App u (App u (App u (App u u)))
+        k' = App u (App u (App u u))
+        u' = Abs "f" (App (App (Var unit "f") s') k')
+
+        s'' = App u' (App u' (App u' (App u' u')))
+        k'' = App u' (App u' (App u' u'))
+        u'' = Abs "f" (App (App (Var unit "f") s'') k'')
+
         y  = Abs "f" (App y' y')
         y' = Abs "x" (App (Var unit "f") (App (Var unit "x") (Var unit "x")))
 
-render :: forall a. Term a -> String
-render (Var _ n) = n
-render (Abs p b) = "λ" <> p <> "." <> render b
-render (App c a) = left c <> " " <> right a
-  where left t@(Abs _ _) = "(" <> render t <> ")"
-        left t           = render t
+type Ann = {free :: Boolean}
 
-        right t@(App _ _) = "(" <> render t <> ")"
-        right t           = render t
+annotate :: forall a. Term a -> Term Ann
+annotate = go Set.empty
+  where go s (Var _ n) = Var {free: not (Set.member n s)} n
+        go s (Abs p b) = Abs p (go (Set.insert p s) b)
+        go s (App c a) = App (go s c) (go s a)
+
+render :: Term Ann -> Node
+render (Var a n) = varNode a.free n
+render (Abs p b) = absNode p (render b)
+render (App c a) = appNode (render c) (render a)
+
+foreign import data Node :: *
+foreign import varNode :: Boolean -> String -> Node
+foreign import absNode :: String -> Node -> Node
+foreign import appNode :: Node -> Node -> Node
 
 foreign import main'
-  :: Fn5 (Term Unit)
-         (Term Unit -> Term Unit)
-         (Term Unit -> Term Unit)
-         (Term Unit -> Term Unit)
-         (Term Unit -> String)
+  :: Fn5 (Term Ann)
+         (Term Ann -> Term Ann)
+         (Term Ann -> Term Ann)
+         (Term Ann -> Term Ann)
+         (Term Ann -> Node)
          (forall eff. Eff (dom :: DOM | eff) Unit)
