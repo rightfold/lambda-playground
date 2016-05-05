@@ -67,9 +67,19 @@ exports['main\''] = function(term, parse, alphaConvert, betaReduce, etaConvert, 
         };
       };
 
-      document.getElementById('edit').addEventListener('click', function() {
-        var text = prompt();
-        transformer(function() { return parse(text); })();
+      document.getElementById('edit').addEventListener('input', function(ev) {
+        var text = ev.target.value;
+        var result = parse(text);
+        if (result.constructor.name === 'Left') {
+          termView.classList.add('error');
+          if (termView.firstChild) {
+            termView.removeChild(termView.firstChild);
+          }
+          termView.appendChild(document.createTextNode(result.value0.value0.message));
+        } else {
+          termView.classList.remove('error');
+          transformer(function() { return result.value0; })();
+        }
       });
 
       document.getElementById('alpha-convert')

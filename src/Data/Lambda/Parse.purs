@@ -8,21 +8,22 @@ import Control.Lazy (defer)
 import Control.Monad.Trampoline (runTrampoline, Trampoline)
 import Data.Array ((..))
 import Data.Char as Char
-import Data.Either (Either(Right))
+import Data.Either (Either)
 import Data.Foldable (foldl)
 import Data.Lambda (Term(..))
 import Data.List (some)
 import Data.List as List
 import Data.List.Unsafe as Unsafe
+import Data.Maybe (Maybe(Just, Nothing))
 import Data.String as String
 import Prelude
-import Text.Parsing.Parser (ParserT, PState(PState), runParserT)
+import Text.Parsing.Parser (fail, ParseError, ParserT, PState(PState), runParserT)
 import Text.Parsing.Parser.Pos (initialPos)
 import Text.Parsing.Parser.String (char, eof, oneOf, whiteSpace)
 
-parseTerm :: String -> Term Unit
-parseTerm s = case runTrampoline $ runParserT (PState {input: s, position: initialPos}) (whiteSpace *> defer term <* eof) of
-                Right t -> t
+parseTerm :: String -> Either ParseError (Term Unit)
+parseTerm s = runTrampoline $ runParserT (PState {input: s, position: initialPos})
+                                         (whiteSpace *> defer term <* eof)
 
 type P a = ParserT String Trampoline a
 
@@ -77,20 +78,30 @@ var _ = this <|> natural <|> macro <|> parend
         natural = (Abs "f" <<< Abs "x" <<< go) <$> integer
           where go 0 = Var unit "x"
                 go n = App (Var unit "f") (go (n - 1))
-        macro = go <$> (hash *> identifier)
-          where go "and"    = Abs "p" (Abs "q" (App (App p q) p))
-                go "or"     = Abs "p" (Abs "q" (App (App p p) q))
-                go "not"    = Abs "p" (App (App p (go "false")) (go "true"))
-                go "xor"    = Abs "p" (Abs "q" (App (App p (App (go "not") q)) q))
-                go "if"     = Abs "p" (Abs "x" (Abs "y" (App (App p x) y)))
-                go "true"   = Abs "x" (Abs "y" x)
-                go "false"  = Abs "x" (Abs "y" y)
+        macro = do
+          name <- hash *> identifier
+          case go name of
+            Just t  -> pure t
+            Nothing -> fail $ "Unknown macro '" <> name <> "'"
+          where go "and"    = Just $ Abs "p" (Abs "q" (App (App p q) p))
+                go "or"     = Just $ Abs "p" (Abs "q" (App (App p p) q))
+                go "not"    = Just $ not_
+                go "xor"    = Just $ Abs "p" (Abs "q" (App (App p (App not_ q)) q))
+                go "if"     = Just $ Abs "p" (Abs "x" (Abs "y" (App (App p x) y)))
+                go "true"   = Just $ true_
+                go "false"  = Just $ false_
 
-                go "iszero" = Abs "n" (App (App n (Abs "x" (go "false"))) (go "true"))
+                go "iszero" = Just $ Abs "n" (App (App n (Abs "x" false_)) true_)
 
-                go "pair"   = Abs "x" (Abs "y" (Abs "z" (App (App z x) y)))
-                go "first"  = Abs "p" (App p (go "true"))
-                go "second" = Abs "p" (App p (go "false"))
+                go "pair"   = Just $ Abs "x" (Abs "y" (Abs "z" (App (App z x) y)))
+                go "first"  = Just $ Abs "p" (App p true_)
+                go "second" = Just $ Abs "p" (App p false_)
+
+                go _        = Nothing
+
+                true_  = Abs "x" (Abs "y" x)
+                false_ = Abs "x" (Abs "y" y)
+                not_   = Abs "p" (App (App p false_) true_)
 
                 n = Var unit "n"
                 p = Var unit "p"

@@ -10,7 +10,19 @@
                 font-size: 14px;
             }
 
-            .abs {
+            #edit {
+                width: 100%;
+            }
+
+            #term.error {
+                background: #f79896;
+                border: solid 1px #873e3c;
+                border-radius: 4px;
+                margin: 0.5em 0;
+                padding: 0.5em;
+            }
+
+            #term .abs {
                 background: rgba(0, 0, 0, 0.02);
                 border: solid 1px black;
                 border-radius: 4px;
@@ -19,11 +31,11 @@
                 padding: 0.5em;
             }
 
-            .var.free { color: red; }
+            #term .var.free { color: red; }
         </style>
     </head>
     <body>
-        <button type="button" id="edit">edit</button>
+        <textarea id="edit"></textarea>
         <button type="button" id="alpha-convert">&alpha;-convert</button>
         <button type="button" id="beta-reduce">&beta;-reduce</button>
         <button type="button" id="eta-convert">&eta;-convert</button>

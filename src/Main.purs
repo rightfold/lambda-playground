@@ -3,15 +3,23 @@ module Main
 ) where
 
 import Control.Monad.Eff (Eff)
+import Data.Either (Either)
 import Data.Function (Fn6, runFn6)
 import Data.Lambda (alphaConvert, betaReduce, Term(..))
 import Data.Lambda.Parse (parseTerm)
 import Data.Set as Set
 import DOM (DOM)
 import Prelude
+import Text.Parsing.Parser (ParseError)
 
 main :: forall eff. Eff (dom :: DOM | eff) Unit
-main = runFn6 main' (annotate t) (parseTerm >>> annotate) alphaConvert betaReduce id render
+main = runFn6 main'
+              (annotate t)
+              (\s -> parseTerm s <#> annotate)
+              alphaConvert
+              betaReduce
+              id
+              render
   where t = App (App cP (cN 10)) (cN 10)
 
         cN 0 = cZ
@@ -44,7 +52,7 @@ foreign import appNode :: Node -> Node -> Node
 
 foreign import main'
   :: Fn6 (Term Ann)
-         (String -> Term Ann)
+         (String -> Either ParseError (Term Ann))
          (Term Ann -> Term Ann)
          (Term Ann -> Term Ann)
          (Term Ann -> Term Ann)
