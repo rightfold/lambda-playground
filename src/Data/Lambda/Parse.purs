@@ -45,6 +45,11 @@ identifier :: P String
 identifier = lxm ((String.fromCharArray <<< List.toUnfoldable) <$> some (oneOf letters))
   where letters = map Char.fromCharCode (97 .. 122)
 
+integer :: P Int
+integer = lxm ((parseInt <<< String.fromCharArray <<< List.toUnfoldable) <$> some (oneOf digits))
+  where digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+foreign import parseInt :: String -> Int
+
 term :: Unit -> P (Term Unit)
 term _ = defer abs
 
@@ -64,6 +69,9 @@ app _ = foldl1 App <$> some next
         next = defer var
 
 var :: Unit -> P (Term Unit)
-var _ = this <|> parend
+var _ = this <|> natural <|> parend
   where this = Var unit <$> identifier
+        natural = (Abs "f" <<< Abs "x" <<< go) <$> integer
+          where go 0 = Var unit "x"
+                go n = App (Var unit "f") (go (n - 1))
         parend = lparen *> defer term <* rparen
