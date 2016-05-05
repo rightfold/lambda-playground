@@ -43,7 +43,7 @@ alphaConvert t = evalState (go Map.empty t) 0
 
         letters :: Array String
         letters = filter (not <<< flip String.contains bad) all
-          where bad = "ςοаерськ"
+          where bad = "λςοаерськ"
                 all = do
                   {offset, count} <- ranges
                   map (Char.toString <<< fromCharCode <<< (_ + offset)) (0 .. (count - 1))
