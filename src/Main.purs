@@ -4,12 +4,12 @@ module Main
 
 import Control.Monad.Eff (Eff)
 import Data.Function (Fn5, runFn5)
-import Data.Lambda (Term(..))
+import Data.Lambda (alphaConvert, Term(..))
 import DOM (DOM)
 import Prelude
 
 main :: forall eff. Eff (dom :: DOM | eff) Unit
-main = runFn5 main' y id id id render
+main = runFn5 main' y alphaConvert id id render
   where y  = Abs "f" (App y' y')
         y' = Abs "x" (App (Var unit "f") (App (Var unit "x") (Var unit "x")))
 
