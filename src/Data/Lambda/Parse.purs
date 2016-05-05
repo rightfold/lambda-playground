@@ -41,6 +41,9 @@ lparen = void $ lxm (char '(')
 rparen :: P Unit
 rparen = void $ lxm (char ')')
 
+hash :: P Unit
+hash = void $ lxm (char '#')
+
 identifier :: P String
 identifier = lxm ((String.fromCharArray <<< List.toUnfoldable) <$> some (oneOf letters))
   where letters = map Char.fromCharCode (97 .. 122)
@@ -69,9 +72,26 @@ app _ = foldl1 App <$> some next
         next = defer var
 
 var :: Unit -> P (Term Unit)
-var _ = this <|> natural <|> parend
+var _ = this <|> natural <|> macro <|> parend
   where this = Var unit <$> identifier
         natural = (Abs "f" <<< Abs "x" <<< go) <$> integer
           where go 0 = Var unit "x"
                 go n = App (Var unit "f") (go (n - 1))
+        macro = go <$> (hash *> identifier)
+          where go "and"    = Abs "p" (Abs "q" (App (App p q) p))
+                go "or"     = Abs "p" (Abs "q" (App (App p p) q))
+                go "not"    = Abs "p" (App (App p (go "false")) (go "true"))
+                go "xor"    = Abs "p" (Abs "q" (App (App p (App (go "not") q)) q))
+                go "if"     = Abs "p" (Abs "x" (Abs "y" (App (App p x) y)))
+                go "true"   = Abs "x" (Abs "y" x)
+                go "false"  = Abs "x" (Abs "y" y)
+
+                go "iszero" = Abs "n" (App (App n (Abs "x" (go "false"))) (go "true"))
+
+                n = Var unit "n"
+                p = Var unit "p"
+                q = Var unit "q"
+                x = Var unit "x"
+                y = Var unit "y"
+                z = Var unit "z"
         parend = lparen *> defer term <* rparen
