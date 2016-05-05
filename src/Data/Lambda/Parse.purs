@@ -88,6 +88,10 @@ var _ = this <|> natural <|> macro <|> parend
 
                 go "iszero" = Abs "n" (App (App n (Abs "x" (go "false"))) (go "true"))
 
+                go "pair"   = Abs "x" (Abs "y" (Abs "z" (App (App z x) y)))
+                go "first"  = Abs "p" (App p (go "true"))
+                go "second" = Abs "p" (App p (go "false"))
+
                 n = Var unit "n"
                 p = Var unit "p"
                 q = Var unit "q"
