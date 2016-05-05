@@ -52,7 +52,7 @@ exports.appNode = function(c) {
   };
 };
 
-exports['main\''] = function(term, alphaConvert, betaReduce, etaConvert, render) {
+exports['main\''] = function(term, parse, alphaConvert, betaReduce, etaConvert, render) {
   return function() {
     addEventListener('load', function() {
       var termView = document.getElementById('term');
@@ -66,6 +66,11 @@ exports['main\''] = function(term, alphaConvert, betaReduce, etaConvert, render)
           termView.appendChild(render(term));
         };
       };
+
+      document.getElementById('edit').addEventListener('click', function() {
+        var text = prompt();
+        transformer(function() { return parse(text); })();
+      });
 
       document.getElementById('alpha-convert')
         .addEventListener('click', transformer(alphaConvert));

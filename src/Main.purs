@@ -3,32 +3,26 @@ module Main
 ) where
 
 import Control.Monad.Eff (Eff)
-import Data.Function (Fn5, runFn5)
+import Data.Function (Fn6, runFn6)
 import Data.Lambda (alphaConvert, betaReduce, Term(..))
+import Data.Lambda.Parse (parseTerm)
 import Data.Set as Set
 import DOM (DOM)
 import Prelude
 
 main :: forall eff. Eff (dom :: DOM | eff) Unit
-main = runFn5 main' (annotate t) alphaConvert betaReduce id render
-  where t = App (App u'' u'') (App y (App (Var unit "f") (Var unit "x")))
+main = runFn6 main' (annotate t) (parseTerm >>> annotate) alphaConvert betaReduce id render
+  where t = App (App cP (cN 10)) (cN 10)
 
-        s = Abs "x" (Abs "y" (Abs "z" (App (App (Var unit "x") (Var unit "z"))
-                                           (App (Var unit "y") (Var unit "z")))))
-        k = Abs "x" (Abs "y" (Var unit "x"))
+        cN 0 = cZ
+        cN n = App cS (cN (n - 1))
 
-        u = Abs "f" (App (App (Var unit "f") s) k)
+        cZ = Abs "f" (Abs "x" (v "x"))
+        cS = Abs "n" (Abs "f" (Abs "x" (App (v "f") (App (App (v "n") (v "f")) (v "x")))))
 
-        s' = App u (App u (App u (App u u)))
-        k' = App u (App u (App u u))
-        u' = Abs "f" (App (App (Var unit "f") s') k')
+        cP = Abs "m" (Abs "n" (Abs "f" (Abs "x" (App (App (v "m") (v "f")) (App (App (v "n") (v "f")) (v "x"))))))
 
-        s'' = App u' (App u' (App u' (App u' u')))
-        k'' = App u' (App u' (App u' u'))
-        u'' = Abs "f" (App (App (Var unit "f") s'') k'')
-
-        y  = Abs "f" (App y' y')
-        y' = Abs "x" (App (Var unit "f") (App (Var unit "x") (Var unit "x")))
+        v = Var unit
 
 type Ann = {free :: Boolean}
 
@@ -49,7 +43,8 @@ foreign import absNode :: String -> Node -> Node
 foreign import appNode :: Node -> Node -> Node
 
 foreign import main'
-  :: Fn5 (Term Ann)
+  :: Fn6 (Term Ann)
+         (String -> Term Ann)
          (Term Ann -> Term Ann)
          (Term Ann -> Term Ann)
          (Term Ann -> Term Ann)
