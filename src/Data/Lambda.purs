@@ -38,11 +38,11 @@ alphaConvert t = evalState (go Map.empty t) 0
         letter :: Int -> String
         letter n = case letters !! n of
                      Just l  -> l
-                     Nothing ->    letter (n -     (length letters))
+                     Nothing ->    letter (n `div` (length letters))
                                 <> letter (n `mod` (length letters))
 
         letters :: Array String
-        letters = filter (not <<< flip String.contains bad) all
+        letters = filter (not <<< String.contains `flip` bad) all
           where bad = "λςοаерськ"
                 all = do
                   {offset, count} <- ranges
