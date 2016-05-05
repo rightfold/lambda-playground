@@ -6,11 +6,13 @@ module Data.Lambda
 
 import Control.Monad.State (evalState)
 import Control.Monad.State.Class (gets, class MonadState, modify)
+import Data.Array ((..), (!!), length, filter)
 import Data.Char (fromCharCode)
 import Data.Char as Char
 import Data.Map (Map)
 import Data.Map as Map
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, Maybe(Just, Nothing))
+import Data.String as String
 import Prelude
 
 data Term a
@@ -34,7 +36,22 @@ alphaConvert t = evalState (go Map.empty t) 0
         go m (App c a) = App <$> go m c <*> go m a
 
         letter :: Int -> String
-        letter n = Char.toString $ fromCharCode $ 97 + n
+        letter n = case letters !! n of
+                     Just l  -> l
+                     Nothing ->    letter (n -     (length letters))
+                                <> letter (n `mod` (length letters))
+
+        letters :: Array String
+        letters = filter (not <<< flip String.contains bad) all
+          where bad = "ςοаерськ"
+                all = do
+                  {offset, count} <- ranges
+                  map (Char.toString <<< fromCharCode <<< (_ + offset)) (0 .. (count - 1))
+                ranges = [ {offset: 0x0061, count: 26}
+                         , {offset: 0x03B1, count: 25}
+                         , {offset: 0x0430, count: 32}
+                         ]
+
 
 betaReduce :: forall a. Term a -> Term a
 betaReduce = alphaConvert >>> go Map.empty >>> alphaConvert
