@@ -83,26 +83,33 @@ var _ = this <|> natural <|> macro <|> parend
           case go name of
             Just t  -> pure t
             Nothing -> fail $ "Unknown macro '" <> name <> "'"
-          where go "and"    = Just $ Abs "p" (Abs "q" (App (App p q) p))
-                go "or"     = Just $ Abs "p" (Abs "q" (App (App p p) q))
-                go "not"    = Just $ not_
-                go "xor"    = Just $ Abs "p" (Abs "q" (App (App p (App not_ q)) q))
-                go "if"     = Just $ Abs "p" (Abs "x" (Abs "y" (App (App p x) y)))
-                go "true"   = Just $ true_
-                go "false"  = Just $ false_
+          where go "and"   = Just $ Abs "p" (Abs "q" (App (App p q) p))
+                go "or"    = Just $ Abs "p" (Abs "q" (App (App p p) q))
+                go "not"   = Just $ not
+                go "xor"   = Just $ Abs "p" (Abs "q" (App (App p (App not q)) q))
+                go "if"    = Just $ Abs "p" (Abs "x" (Abs "y" (App (App p x) y)))
+                go "true"  = Just $ true_
+                go "false" = Just $ false_
 
                 go "iszero" = Just $ Abs "n" (App (App n (Abs "x" false_)) true_)
 
-                go "pair"   = Just $ Abs "x" (Abs "y" (Abs "z" (App (App z x) y)))
-                go "first"  = Just $ Abs "p" (App p true_)
-                go "second" = Just $ Abs "p" (App p false_)
+                go "pair"    = Just $ pair
+                go "first"   = Just $ first
+                go "second"  = Just $ second
+                go "curry"   = Just $ Abs "f" (Abs "x" (Abs "y" (App f (App (App pair x) y))))
+                go "uncurry" = Just $ Abs "f" (Abs "p" (App (App f (App first p)) (App second p)))
 
                 go _        = Nothing
 
                 true_  = Abs "x" (Abs "y" x)
                 false_ = Abs "x" (Abs "y" y)
-                not_   = Abs "p" (App (App p false_) true_)
+                not    = Abs "p" (App (App p false_) true_)
 
+                pair   = Abs "x" (Abs "y" (Abs "z" (App (App z x) y)))
+                first  = Abs "p" (App p true_)
+                second = Abs "p" (App p false_)
+
+                f = Var unit "f"
                 n = Var unit "n"
                 p = Var unit "p"
                 q = Var unit "q"
