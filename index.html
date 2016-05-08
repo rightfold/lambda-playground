@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Lambda Playground</title>
+        <script src="output/main.js"></script>
+        <style>
+            body {
+                font-family: Roboto, 'Segoe UI', sans-serif;
+                font-size: 14px;
+            }
+
+            #edit {
+                width: 100%;
+            }
+
+            #term.error {
+                background: #f79896;
+                border: solid 1px #873e3c;
+                border-radius: 4px;
+                margin: 0.5em 0;
+                padding: 0.5em;
+            }
+
+            #term .abs {
+                background: rgba(0, 0, 0, 0.02);
+                border: solid 1px black;
+                border-radius: 4px;
+                display: inline-block;
+                margin: 0.5em;
+                padding: 0.5em;
+            }
+
+            #term .var.free { color: red; }
+        </style>
+    </head>
+    <body>
+        <textarea id="edit"></textarea>
+        <button type="button" id="alpha-convert">&alpha;-convert</button>
+        <button type="button" id="beta-reduce">&beta;-reduce</button>
+        <button type="button" id="eta-convert">&eta;-convert</button>
+        <span>
+            macros:
+            <code>#and</code>
+            <code>#or</code>
+            <code>#not</code>
+            <code>#xor</code>
+            <code>#if</code>
+            <code>#true</code>
+            <code>#false</code>
+            <code>#iszero</code>
+            <code>#pair</code>
+            <code>#first</code>
+            <code>#second</code>
+            <code>#curry</code>
+            <code>#uncurry</code>
+            <code>#s</code>
+            <code>#k</code>
+            <code>#i</code>
+            <code>#u</code>
+            <code>#y</code>
+
+            naturals:
+            <code>1</code> <code>2</code> <code>42</code>
+        </span>
+        <div id="term"></div>
+    </body>
+</html>
